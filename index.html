@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POP – ASCOM / 15ª DSPC</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('OvUvhcaiOxAuX1PC-');</script>
 <style>
   :root {
     --azul: #1a3a5c; --azul2: #1e4d8c; --dourado: #c8a84b;
@@ -636,7 +638,12 @@ REGRAS:
 
     const hoje = new Date().toLocaleDateString('pt-BR');
     const assunto = `NOTA À IMPRENSA | ${TIPOS[tipoAtual].toUpperCase()} | ${dados.f_delegacia || '15ª DSPC'} | ${hoje}`;
-    window.location.href = `mailto:${EMAIL_DESTINO}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(nota)}`;
+
+    await emailjs.send('service_tww534j', 'template_znxkvb7', {
+      assunto: assunto,
+      nota: nota,
+      delegacia: dados.f_delegacia || '15ª DSPC'
+    });
 
     document.getElementById('status-spinner').style.display = 'none';
     document.getElementById('status-ok').style.display = 'block';
