@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POP – ASCOM / 15ª DSPC</title>
+<style>
+  :root {
+    --azul: #1a3a5c; --azul2: #1e4d8c; --dourado: #c8a84b;
+    --bg: #f0f2f5; --branco: #ffffff; --cinza: #6b7280;
+    --borda: #d1d5db; --erro: #dc2626; --verde: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #1f2937; min-height: 100vh; }
+
+  header { background: var(--azul); color: white; padding: 14px 24px; display: flex; align-items: center; gap: 14px; border-bottom: 3px solid var(--dourado); }
+  header .brasao { width: 54px; height: 54px; border-radius: 50%; background: var(--dourado); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #1a1a1a; text-align: center; line-height: 1.1; }
+  header h1 { font-size: 15px; font-weight: 700; line-height: 1.3; }
+  header p { font-size: 11px; opacity: .75; }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
+
+  .grid-tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .tipo-card { background: var(--branco); border: 2px solid var(--borda); border-radius: 10px; padding: 22px 18px; cursor: pointer; transition: all .2s; text-align: center; }
+  .tipo-card:hover { border-color: var(--azul2); background: #f0f4ff; }
+  .tipo-card .icone { font-size: 36px; margin-bottom: 10px; }
+  .tipo-card h3 { font-size: 14px; font-weight: 700; color: var(--azul); }
+  .tipo-card p { font-size: 12px; color: var(--cinza); margin-top: 4px; }
+
+  .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .btn-voltar { background: none; border: 1px solid var(--borda); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--cinza); }
+  .btn-voltar:hover { background: var(--borda); }
+  .form-titulo { font-size: 18px; font-weight: 700; color: var(--azul); }
+  .form-sub { font-size: 12px; color: var(--cinza); }
+
+  .secao { margin-bottom: 24px; }
+  .secao-titulo { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--azul2); letter-spacing: .5px; border-bottom: 1px solid var(--borda); padding-bottom: 6px; margin-bottom: 14px; }
+  .campo { margin-bottom: 14px; }
+  .campo label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .campo label span { color: var(--erro); }
+  .campo input, .campo select, .campo textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--borda); border-radius: 7px; font-size: 13px; font-family: inherit; background: white; transition: border .2s; }
+  .campo input:focus, .campo select:focus, .campo textarea:focus { outline: none; border-color: var(--azul2); }
+  .campo textarea { min-height: 90px; resize: vertical; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .item-card { background: #f9fafb; border: 1px solid var(--borda); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .item-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .item-card-titulo { font-size: 12px; font-weight: 700; color: var(--azul); }
+  .btn-remover { background: #fee2e2; border: none; color: var(--erro); border-radius: 5px; padding: 3px 9px; font-size: 12px; cursor: pointer; }
+  .btn-remover:hover { background: #fca5a5; }
+  .btn-adicionar { display: flex; align-items: center; gap: 6px; background: #eff6ff; border: 1px dashed var(--azul2); color: var(--azul2); border-radius: 7px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 4px; transition: background .2s; }
+  .btn-adicionar:hover { background: #dbeafe; }
+
+  .aviso-privacidade { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e; margin-bottom: 18px; }
+  .badge-tipo { display: inline-block; background: var(--azul2); color: white; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 6px; }
+  h2.tela-titulo { font-size: 20px; font-weight: 700; color: var(--azul); margin-bottom: 6px; }
+  .tela-sub { font-size: 13px; color: var(--cinza); margin-bottom: 24px; }
+
+  .checkgroup { display: flex; flex-wrap: wrap; gap: 8px; }
+  .checkgroup label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 400; background: #f9fafb; border: 1px solid var(--borda); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+  .checkgroup input[type=checkbox] { width: auto; }
+
+  .btn-enviar { width: 100%; padding: 16px; background: var(--azul); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+  .btn-enviar:hover { background: var(--azul2); }
+  .btn-enviar:disabled { background: var(--cinza); cursor: not-allowed; }
+
+  .tela-status { text-align: center; padding: 60px 20px; }
+  .spinner { width: 48px; height: 48px; border: 5px solid var(--borda); border-top-color: var(--azul); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-icone { font-size: 64px; margin-bottom: 16px; }
+  .status-titulo { font-size: 22px; font-weight: 700; color: var(--azul); margin-bottom: 8px; }
+  .status-sub { font-size: 14px; color: var(--cinza); margin-bottom: 28px; }
+  .btn-nova { padding: 12px 32px; background: var(--dourado); color: #1a1a1a; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-nova:hover { filter: brightness(.92); }
+
+  @media(max-width:560px) { .grid-tipos, .grid2, .grid3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brasao">PC<br>PB</div>
+  <div>
+    <h1>POP – Coleta de Informações para Nota à Imprensa</h1>
+    <p>Polícia Civil da Paraíba · 15ª Delegacia Seccional · ASCOM</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TELA 1 -->
+  <div id="tela-selecao">
+    <h2 class="tela-titulo">Qual o tipo de ocorrência?</h2>
+    <p class="tela-sub">Selecione o tipo para abrir o formulário correspondente.</p>
+    <div class="grid-tipos">
+      <div class="tipo-card" onclick="abrirFormulario('transito')">
+        <div class="icone">🚗</div>
+        <h3>Acidente de Trânsito</h3>
+        <p>Colisão, atropelamento, capotamento com vítimas</p>
+      </div>
+      <div class="tipo-card" onclick="abrirFormulario('acidente')">
+        <div class="icone">🏗️</div>
+        <h3>Acidente com Vítima</h3>
+        <p>Queda, afogamento, acidente de trabalho, outros</p>
+      </div>
+      <div class="tipo-card" onclick="abrirFormulario('domestica')">
+        <div class="icone">🏠</div>
+        <h3>Violência Doméstica</h3>
+        <p>Lesão corporal, ameaça, medida protetiva</p>
+      </div>
+      <div class="tipo-card" onclick="abrirFormulario('sexual')">
+        <div class="icone">🔒</div>
+        <h3>Abuso Sexual</h3>
+        <p>Vítima identificada apenas por iniciais</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 2 -->
+  <div id="tela-form" style="display:none">
+    <div class="form-header">
+      <button class="btn-voltar" onclick="voltarSelecao()">← Voltar</button>
+      <div>
+        <div id="badge-tipo" class="badge-tipo"></div>
+        <div class="form-titulo" id="form-titulo"></div>
+        <div class="form-sub">Preencha os campos e clique em Enviar</div>
+      </div>
+    </div>
+    <div id="form-conteudo"></div>
+    <button class="btn-enviar" id="btn-enviar" onclick="enviarOcorrencia()">📨 Enviar Nota à Imprensa</button>
+  </div>
+
+  <!-- TELA 3 -->
+  <div id="tela-status" style="display:none">
+    <div class="tela-status">
+      <div id="status-spinner" class="spinner"></div>
+      <div id="status-ok" style="display:none">
+        <div class="status-icone">✅</div>
+        <div class="status-titulo">Nota enviada com sucesso!</div>
+        <div class="status-sub">A nota foi gerada e enviada para<br><strong>15dspc.ascom@gmail.com</strong></div>
+        <button class="btn-nova" onclick="novaNota()">+ Registrar Nova Ocorrência</button>
+      </div>
+      <div id="status-erro" style="display:none">
+        <div class="status-icone">❌</div>
+        <div class="status-titulo">Erro ao enviar</div>
+        <div class="status-sub" id="status-erro-msg"></div>
+        <button class="btn-nova" onclick="voltarFormErro()">← Tentar novamente</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const EMAIL_DESTINO = '15dspc.ascom@gmail.com';
+let tipoAtual = '';
+const contadores = { condutor: 0, vitima: 0, agressor: 0 };
+const TIPOS = {
+  transito: 'Acidente de Trânsito com Vítima',
+  acidente: 'Acidente com Vítima (Não Trânsito)',
+  domestica: 'Violência Doméstica',
+  sexual: 'Abuso Sexual'
+};
+
+function abrirFormulario(tipo) {
+  tipoAtual = tipo;
+  contadores.condutor = 0; contadores.vitima = 0; contadores.agressor = 0;
+  document.getElementById('tela-selecao').style.display = 'none';
+  document.getElementById('tela-form').style.display = 'block';
+  document.getElementById('badge-tipo').textContent = TIPOS[tipo];
+  document.getElementById('form-titulo').textContent = TIPOS[tipo];
+  document.getElementById('form-conteudo').innerHTML = getFormHTML(tipo);
+  if (tipo === 'transito') { addCondutor(); addVitima('transito'); }
+  if (tipo === 'acidente') { addVitima('acidente'); }
+  if (tipo === 'domestica') { addVitima('domestica'); addAgressor(); }
+  if (tipo === 'sexual') { addVitima('sexual'); }
+}
+
+function voltarSelecao() {
+  document.getElementById('tela-form').style.display = 'none';
+  document.getElementById('tela-selecao').style.display = 'block';
+}
+function voltarFormErro() {
+  document.getElementById('tela-status').style.display = 'none';
+  document.getElementById('tela-form').style.display = 'block';
+}
+function novaNota() {
+  document.getElementById('tela-status').style.display = 'none';
+  document.getElementById('tela-selecao').style.display = 'block';
+}
+
+function campoResponsavel() {
+  return `
+  <div class="secao">
+    <div class="secao-titulo">Responsável</div>
+    <div class="grid2">
+      <div class="campo"><label>Delegacia <span>*</span></label><input type="text" id="f_delegacia" placeholder="Ex: Delegacia de Teixeira"></div>
+      <div class="campo"><label>Responsável pelo Preenchimento <span>*</span></label><input type="text" id="f_responsavel" placeholder="Nome do agente"></div>
+    </div>
+  </div>`;
+}
+
+function getFormHTML(tipo) {
+  if (tipo === 'transito') return `
+    <div class="secao">
+      <div class="secao-titulo">Dados da Ocorrência</div>
+      <div class="campo"><label>Natureza <span>*</span></label>
+        <select id="f_natureza"><option value="">Selecione</option>
+          <option>Colisão Lateral</option><option>Colisão Frontal</option>
+          <option>Colisão Traseira</option><option>Atropelamento</option><option>Capotamento</option>
+        </select></div>
+      <div class="grid2">
+        <div class="campo"><label>Data <span>*</span></label><input type="date" id="f_data"></div>
+        <div class="campo"><label>Hora <span>*</span></label><input type="time" id="f_hora"></div>
+      </div>
+      <div class="campo"><label>Local Exato <span>*</span></label><input type="text" id="f_local" placeholder="Rua, bairro, município"></div>
+      <div class="campo"><label>Ponto de Referência</label><input type="text" id="f_ref"></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Condutores</div>
+      <div id="lista-condutores"></div>
+      <button class="btn-adicionar" onclick="addCondutor()">+ Adicionar Condutor</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Vítimas</div>
+      <div id="lista-vitimas"></div>
+      <button class="btn-adicionar" onclick="addVitima('transito')">+ Adicionar Vítima</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Procedimentos</div>
+      <div class="grid2">
+        <div class="campo"><label>Perícia Acionada?</label>
+          <select id="f_pericia"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+        <div class="campo"><label>Perito</label><input type="text" id="f_perito"></div>
+      </div>
+      <div class="campo"><label>Exames Requisitados</label>
+        <div class="checkgroup">
+          <label><input type="checkbox" id="f_ex1"> Necroscópico</label>
+          <label><input type="checkbox" id="f_ex2"> Lesão Corporal</label>
+          <label><input type="checkbox" id="f_ex3"> Alcoolemia</label>
+          <label><input type="checkbox" id="f_ex4"> Perícia em Veículo</label>
+          <label><input type="checkbox" id="f_ex5"> Local do acidente</label>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="campo"><label>Prisão em Flagrante?</label>
+          <select id="f_prisao"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+        <div class="campo"><label>Motivo da Prisão</label><input type="text" id="f_motivo_prisao"></div>
+      </div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Modus Operandi</div>
+      <div class="campo"><label>Modus Operandi (favor detalhar) <span>*</span></label><textarea id="f_relato" placeholder="Descreva detalhadamente como o acidente aconteceu..."></textarea></div>
+    </div>
+    ${campoResponsavel()}`;
+
+  if (tipo === 'acidente') return `
+    <div class="secao">
+      <div class="secao-titulo">Dados da Ocorrência</div>
+      <div class="campo"><label>Tipo de Acidente <span>*</span></label>
+        <select id="f_tipo_acid"><option value="">Selecione</option>
+          <option>Queda de altura</option><option>Afogamento</option><option>Acidente de trabalho</option>
+          <option>Intoxicação</option><option>Queimadura</option><option>Soterramento</option><option>Outro</option>
+        </select></div>
+      <div class="campo"><label>Descreva (se "Outro")</label><input type="text" id="f_tipo_acid_outro"></div>
+      <div class="grid2">
+        <div class="campo"><label>Data <span>*</span></label><input type="date" id="f_data"></div>
+        <div class="campo"><label>Hora</label><input type="time" id="f_hora"></div>
+      </div>
+      <div class="campo"><label>Local <span>*</span></label><input type="text" id="f_local"></div>
+      <div class="campo"><label>Município <span>*</span></label><input type="text" id="f_municipio"></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Vítimas</div>
+      <div id="lista-vitimas"></div>
+      <button class="btn-adicionar" onclick="addVitima('acidente')">+ Adicionar Vítima</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Procedimentos</div>
+      <div class="grid2">
+        <div class="campo"><label>Perícia Acionada?</label>
+          <select id="f_pericia"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+        <div class="campo"><label>Prisão em Flagrante?</label>
+          <select id="f_prisao"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="f_obs"></textarea></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Modus Operandi</div>
+      <div class="campo"><label>Modus Operandi (favor detalhar) <span>*</span></label><textarea id="f_relato" placeholder="Descreva detalhadamente como o acidente aconteceu..."></textarea></div>
+    </div>
+    ${campoResponsavel()}`;
+
+  if (tipo === 'domestica') return `
+    <div class="secao">
+      <div class="secao-titulo">Dados da Ocorrência</div>
+      <div class="campo"><label>Natureza <span>*</span></label>
+        <select id="f_natureza"><option value="">Selecione</option>
+          <option>Lesão Corporal Dolosa</option><option>Ameaça</option><option>Injúria</option>
+          <option>Vias de Fato</option><option>Tentativa de Feminicídio</option><option>Feminicídio</option><option>Outro</option>
+        </select></div>
+      <div class="grid2">
+        <div class="campo"><label>Data <span>*</span></label><input type="date" id="f_data"></div>
+        <div class="campo"><label>Hora</label><input type="time" id="f_hora"></div>
+      </div>
+      <div class="campo"><label>Local <span>*</span></label><input type="text" id="f_local" placeholder="Residência, rua, município"></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Vítimas</div>
+      <div id="lista-vitimas"></div>
+      <button class="btn-adicionar" onclick="addVitima('domestica')">+ Adicionar Vítima</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Agressor(es)</div>
+      <div id="lista-agressores"></div>
+      <button class="btn-adicionar" onclick="addAgressor()">+ Adicionar Agressor(a)</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Modus Operandi</div>
+      <div class="campo"><label>Modus Operandi (favor detalhar) <span>*</span></label><textarea id="f_relato" placeholder="Descreva detalhadamente como o fato aconteceu..."></textarea></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Procedimentos</div>
+      <div class="grid2">
+        <div class="campo"><label>Prisão em Flagrante?</label>
+          <select id="f_prisao"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+        <div class="campo"><label>Medida Protetiva Requerida?</label>
+          <select id="f_mp_req"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="f_obs"></textarea></div>
+    </div>
+    ${campoResponsavel()}`;
+
+  if (tipo === 'sexual') return `
+    <div class="aviso-privacidade">🔒 <strong>Proteção da Vítima:</strong> O nome completo NÃO será incluído na nota. Apenas iniciais e idade.</div>
+    <div class="secao">
+      <div class="secao-titulo">Dados da Ocorrência</div>
+      <div class="campo"><label>Natureza <span>*</span></label>
+        <select id="f_natureza"><option value="">Selecione</option>
+          <option>Estupro</option><option>Estupro de Vulnerável</option>
+          <option>Importunação Sexual</option><option>Assédio Sexual</option>
+          <option>Exploração Sexual</option><option>Outro</option>
+        </select></div>
+      <div class="grid2">
+        <div class="campo"><label>Data <span>*</span></label><input type="date" id="f_data"></div>
+        <div class="campo"><label>Hora (aproximada)</label><input type="time" id="f_hora"></div>
+      </div>
+      <div class="campo"><label>Local <span>*</span></label><input type="text" id="f_local" placeholder="Município e localidade geral"></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Vítimas</div>
+      <div id="lista-vitimas"></div>
+      <button class="btn-adicionar" onclick="addVitima('sexual')">+ Adicionar Vítima</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Suspeito(s) / Autor(es)</div>
+      <div id="lista-agressores"></div>
+      <button class="btn-adicionar" onclick="addAgressor()">+ Adicionar Suspeito</button>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Modus Operandi</div>
+      <div class="campo"><label>Modus Operandi (favor detalhar) <span>*</span></label><textarea id="f_relato" placeholder="Descreva detalhadamente como o fato aconteceu..."></textarea></div>
+    </div>
+    <div class="secao">
+      <div class="secao-titulo">Procedimentos</div>
+      <div class="grid2">
+        <div class="campo"><label>Prisão em Flagrante?</label>
+          <select id="f_prisao"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+        <div class="campo"><label>Exame Requisitado?</label>
+          <select id="f_exame"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></div>
+      </div>
+      <div class="campo"><label>Observações</label><textarea id="f_obs"></textarea></div>
+    </div>
+    ${campoResponsavel()}`;
+}
+
+function addCondutor() {
+  contadores.condutor++;
+  const n = contadores.condutor;
+  const div = document.createElement('div');
+  div.className = 'item-card'; div.id = `condutor-${n}`;
+  div.innerHTML = `
+    <div class="item-card-header">
+      <div class="item-card-titulo">Condutor ${n}</div>
+      ${n > 1 ? `<button class="btn-remover" onclick="remover('condutor-${n}')">✕ Remover</button>` : ''}
+    </div>
+    <div class="grid2">
+      <div class="campo"><label>Nome</label><input type="text" id="c${n}_nome"></div>
+      <div class="campo"><label>Idade</label><input type="number" id="c${n}_idade" min="14" max="99"></div>
+    </div>
+    <div class="campo"><label>Veículo / Placa</label><input type="text" id="c${n}_veiculo"></div>
+    <div class="grid3">
+      <div class="campo"><label>CNH</label>
+        <select id="c${n}_cnh"><option value="">-</option>
+          <option>Regular</option><option>Vencida</option><option>Inabilitado</option><option>Não Portava</option>
+        </select></div>
+      <div class="campo"><label>Alcoolemia</label>
+        <select id="c${n}_alcool"><option value="">-</option>
+          <option>Negativo</option><option>Positivo</option><option>Recusou-se</option><option>Não Realizado</option>
+        </select></div>
+      <div class="campo"><label>Atitude Pós-Acidente</label>
+        <select id="c${n}_atitude"><option value="">-</option>
+          <option>Permaneceu no local</option><option>Prestou Socorro</option><option>Evadiu-se</option>
+        </select></div>
+    </div>`;
+  document.getElementById('lista-condutores').appendChild(div);
+}
+
+function addVitima(tipo) {
+  contadores.vitima++;
+  const n = contadores.vitima;
+  const div = document.createElement('div');
+  div.className = 'item-card'; div.id = `vitima-${n}`;
+  let campos = '';
+  if (tipo === 'sexual') {
+    campos = `
+      <div class="grid3">
+        <div class="campo"><label>Iniciais <span>*</span></label><input type="text" id="v${n}_iniciais" maxlength="10" placeholder="Ex: M.S.F."></div>
+        <div class="campo"><label>Idade</label><input type="number" id="v${n}_idade" min="0" max="120"></div>
+        <div class="campo"><label>Gênero</label>
+          <select id="v${n}_genero"><option value="">-</option>
+            <option>Feminino</option><option>Masculino</option><option>Não informado</option>
+          </select></div>
+      </div>
+      <div class="campo"><label>Estado após o fato</label>
+        <select id="v${n}_estado"><option value="">-</option>
+          <option>Encaminhada a serviço de saúde</option><option>Atendida e liberada</option>
+          <option>Internada</option><option>Sem necessidade de atendimento hospitalar</option>
+        </select></div>`;
+  } else if (tipo === 'domestica') {
+    campos = `
+      <div class="grid2">
+        <div class="campo"><label>Nome</label><input type="text" id="v${n}_nome"></div>
+        <div class="campo"><label>Idade</label><input type="number" id="v${n}_idade" min="0" max="120"></div>
+      </div>
+      <div class="grid2">
+        <div class="campo"><label>Lesões / Estado</label>
+          <select id="v${n}_estado"><option value="">-</option>
+            <option>Sem lesões visíveis</option><option>Lesões Leves</option>
+            <option>Lesões Graves</option><option>Óbito</option>
+          </select></div>
+        <div class="campo"><label>Destino do Socorro</label><input type="text" id="v${n}_dest"></div>
+      </div>
+      <div class="campo"><label>Medida Protetiva vigente?</label>
+        <select id="v${n}_medida"><option value="">-</option>
+          <option>Sim</option><option>Não</option><option>Não informado</option>
+        </select></div>`;
+  } else if (tipo === 'transito') {
+    campos = `
+      <div class="grid3">
+        <div class="campo"><label>Nome</label><input type="text" id="v${n}_nome"></div>
+        <div class="campo"><label>Idade</label><input type="number" id="v${n}_idade" min="0" max="120"></div>
+        <div class="campo"><label>Condição</label>
+          <select id="v${n}_cond"><option value="">-</option>
+            <option>Condutor</option><option>Passageiro</option><option>Pedestre</option>
+          </select></div>
+      </div>
+      <div class="grid2">
+        <div class="campo"><label>Gravidade</label>
+          <select id="v${n}_grav"><option value="">-</option>
+            <option>Óbito no local</option><option>Óbito no hospital</option>
+            <option>Lesões Graves</option><option>Lesões Leves</option>
+          </select></div>
+        <div class="campo"><label>Destino do Socorro</label><input type="text" id="v${n}_dest"></div>
+      </div>`;
+  } else {
+    campos = `
+      <div class="grid2">
+        <div class="campo"><label>Nome</label><input type="text" id="v${n}_nome"></div>
+        <div class="campo"><label>Idade</label><input type="number" id="v${n}_idade" min="0" max="120"></div>
+      </div>
+      <div class="grid2">
+        <div class="campo"><label>Gravidade</label>
+          <select id="v${n}_grav"><option value="">-</option>
+            <option>Óbito no local</option><option>Óbito no hospital</option>
+            <option>Lesões Graves</option><option>Lesões Leves</option>
+          </select></div>
+        <div class="campo"><label>Destino do Socorro</label><input type="text" id="v${n}_dest"></div>
+      </div>`;
+  }
+  div.innerHTML = `
+    <div class="item-card-header">
+      <div class="item-card-titulo">Vítima ${n}</div>
+      ${n > 1 ? `<button class="btn-remover" onclick="remover('vitima-${n}')">✕ Remover</button>` : ''}
+    </div>${campos}`;
+  document.getElementById('lista-vitimas').appendChild(div);
+}
+
+function addAgressor() {
+  contadores.agressor++;
+  const n = contadores.agressor;
+  const div = document.createElement('div');
+  div.className = 'item-card'; div.id = `agressor-${n}`;
+  const label = tipoAtual === 'sexual' ? 'Suspeito' : 'Agressor(a)';
+  div.innerHTML = `
+    <div class="item-card-header">
+      <div class="item-card-titulo">${label} ${n}</div>
+      ${n > 1 ? `<button class="btn-remover" onclick="remover('agressor-${n}')">✕ Remover</button>` : ''}
+    </div>
+    <div class="grid2">
+      <div class="campo"><label>Nome ${tipoAtual === 'sexual' ? '(ou iniciais)' : ''}</label><input type="text" id="a${n}_nome"></div>
+      <div class="campo"><label>Idade</label><input type="number" id="a${n}_idade" min="0" max="99"></div>
+    </div>
+    <div class="grid2">
+      <div class="campo"><label>Vínculo com a Vítima</label>
+        <select id="a${n}_vinculo"><option value="">-</option>
+          <option>Desconhecido</option><option>Cônjuge / Companheiro(a)</option>
+          <option>Ex-cônjuge / Ex-companheiro(a)</option><option>Namorado(a) / Ex-namorado(a)</option>
+          <option>Familiar</option><option>Conhecido</option><option>Outro</option>
+        </select></div>
+      <div class="campo"><label>Antecedentes Criminais</label>
+        <select id="a${n}_antecedentes"><option value="">-</option>
+          <option>Sim</option><option>Não</option><option>Não verificado</option>
+        </select></div>
+    </div>
+    <div class="campo"><label>Descrição dos antecedentes</label><input type="text" id="a${n}_antecedentes_desc"></div>`;
+  const lista = document.getElementById('lista-agressores');
+  if (lista) lista.appendChild(div);
+}
+
+function remover(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function coletarDados() {
+  const dados = { tipo: tipoAtual, tipo_label: TIPOS[tipoAtual] };
+  document.querySelectorAll('#form-conteudo input[id^="f_"], #form-conteudo select[id^="f_"], #form-conteudo textarea[id^="f_"]').forEach(el => {
+    if (el.type === 'checkbox') return;
+    if (el.value) dados[el.id] = el.value;
+  });
+  const exames = [];
+  ['f_ex1','f_ex2','f_ex3','f_ex4','f_ex5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.checked) exames.push(el.parentElement.textContent.trim());
+  });
+  if (exames.length) dados['exames'] = exames.join(', ');
+  const condutores = [];
+  document.querySelectorAll('[id^="condutor-"]').forEach(card => {
+    const n = card.id.split('-')[1];
+    const obj = {};
+    ['nome','idade','veiculo','cnh','alcool','atitude'].forEach(f => {
+      const el = document.getElementById(`c${n}_${f}`);
+      if (el && el.value) obj[f] = el.value;
+    });
+    if (Object.keys(obj).length) condutores.push(obj);
+  });
+  if (condutores.length) dados['condutores'] = condutores;
+  const vitimas = [];
+  document.querySelectorAll('[id^="vitima-"]').forEach(card => {
+    const n = card.id.split('-')[1];
+    const obj = {};
+    ['nome','idade','cond','grav','dest','estado','iniciais','genero','medida'].forEach(f => {
+      const el = document.getElementById(`v${n}_${f}`);
+      if (el && el.value) obj[f] = el.value;
+    });
+    if (Object.keys(obj).length) vitimas.push(obj);
+  });
+  if (vitimas.length) dados['vitimas'] = vitimas;
+  const agressores = [];
+  document.querySelectorAll('[id^="agressor-"]').forEach(card => {
+    const n = card.id.split('-')[1];
+    const obj = {};
+    ['nome','idade','vinculo','antecedentes','antecedentes_desc'].forEach(f => {
+      const el = document.getElementById(`a${n}_${f}`);
+      if (el && el.value) obj[f] = el.value;
+    });
+    if (Object.keys(obj).length) agressores.push(obj);
+  });
+  if (agressores.length) dados['agressores'] = agressores;
+  return dados;
+}
+
+function buildPrompt(d) {
+  let txt = `TIPO DE OCORRÊNCIA: ${d.tipo_label}\n`;
+  const skip = ['tipo','tipo_label','condutores','vitimas','agressores'];
+  Object.entries(d).forEach(([k,v]) => {
+    if (skip.includes(k)) return;
+    txt += `${k.replace('f_','').replace(/_/g,' ').toUpperCase()}: ${v}\n`;
+  });
+  if (d.condutores) d.condutores.forEach((c,i) => {
+    txt += `\nCONDUTOR ${i+1}:\n`;
+    Object.entries(c).forEach(([k,v]) => txt += `  ${k}: ${v}\n`);
+  });
+  if (d.vitimas) d.vitimas.forEach((v,i) => {
+    txt += `\nVÍTIMA ${i+1}:\n`;
+    Object.entries(v).forEach(([k,val]) => txt += `  ${k}: ${val}\n`);
+  });
+  if (d.agressores) d.agressores.forEach((a,i) => {
+    txt += `\nAGRESSOR/SUSPEITO ${i+1}:\n`;
+    Object.entries(a).forEach(([k,v]) => txt += `  ${k}: ${v}\n`);
+  });
+  return `Com base nos dados abaixo, redija uma nota à imprensa completa no padrão ASCOM/15ª DSPC:\n\n${txt}`;
+}
+
+async function enviarOcorrencia() {
+  const dados = coletarDados();
+  if (!dados.f_data) { alert('Informe a data do fato.'); return; }
+  if (!dados.f_local) { alert('Informe o local da ocorrência.'); return; }
+  if (!dados.f_delegacia) { alert('Informe a delegacia responsável.'); return; }
+  if (!dados.f_responsavel) { alert('Informe o responsável pelo preenchimento.'); return; }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true; btn.innerHTML = '⏳ Gerando nota...';
+
+  document.getElementById('tela-form').style.display = 'none';
+  document.getElementById('tela-status').style.display = 'block';
+  document.getElementById('status-spinner').style.display = 'block';
+  document.getElementById('status-ok').style.display = 'none';
+  document.getElementById('status-erro').style.display = 'none';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: `Você é o redator oficial da Assessoria de Comunicação (ASCOM) da 15ª Delegacia Seccional de Polícia Civil (DSPC) de Patos/PB.
+Redija notas à imprensa no estilo institucional da Polícia Civil da Paraíba.
+
+REGRAS:
+- Cabeçalho: POLÍCIA CIVIL. 15ª DSPC/PATOS. [DELEGACIA]. [TIPO DO FATO EM MAIÚSCULAS]. [DATA DD/MM/AAAA].
+- Linguagem formal, objetiva, impessoal, terceira pessoa
+- Parágrafos: (1) apresentação do fato, (2) como aconteceu, (3) envolvidos e resultado policial, (4) providências tomadas
+- Finalize SEMPRE com:\nPolícia Civil da Paraíba\n15ª Delegacia Seccional\nAssessoria de Comunicação e Marketing Institucional (ASCOM/15ª)
+- ABUSO SEXUAL: NUNCA mencione nome completo da vítima — apenas iniciais e idade
+- Use "equipe policial", "autoridade policial", "providências cabíveis"
+- Retorne APENAS o texto da nota, sem comentários adicionais`,
+        messages: [{ role: 'user', content: buildPrompt(dados) }]
+      })
+    });
+
+    const aiData = await resp.json();
+    const nota = aiData.content?.map(c => c.text || '').join('') || '';
+    if (!nota) throw new Error('Resposta vazia');
+
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const assunto = `NOTA À IMPRENSA | ${TIPOS[tipoAtual].toUpperCase()} | ${dados.f_delegacia || '15ª DSPC'} | ${hoje}`;
+    window.location.href = `mailto:${EMAIL_DESTINO}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(nota)}`;
+
+    document.getElementById('status-spinner').style.display = 'none';
+    document.getElementById('status-ok').style.display = 'block';
+  } catch(e) {
+    document.getElementById('status-spinner').style.display = 'none';
+    document.getElementById('status-erro').style.display = 'block';
+    document.getElementById('status-erro-msg').textContent = 'Não foi possível gerar a nota. Verifique sua conexão e tente novamente.';
+    btn.disabled = false; btn.innerHTML = '📨 Enviar Nota à Imprensa';
+  }
+}
+</script>
+</body>
+</html>
