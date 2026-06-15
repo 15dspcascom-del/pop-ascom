@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POP – ASCOM / 15ª DSPC</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init('OvUvhcaiOxAuX1PC-');</script>
 <style>
   :root {
     --azul: #1a3a5c; --azul2: #1e4d8c; --dourado: #c8a84b;
@@ -611,39 +609,21 @@ async function enviarOcorrencia() {
   document.getElementById('status-erro').style.display = 'none';
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: `Você é o redator oficial da Assessoria de Comunicação (ASCOM) da 15ª Delegacia Seccional de Polícia Civil (DSPC) de Patos/PB.
-Redija notas à imprensa no estilo institucional da Polícia Civil da Paraíba.
-
-REGRAS:
-- Cabeçalho: POLÍCIA CIVIL. 15ª DSPC/PATOS. [DELEGACIA]. [TIPO DO FATO EM MAIÚSCULAS]. [DATA DD/MM/AAAA].
-- Linguagem formal, objetiva, impessoal, terceira pessoa
-- Parágrafos: (1) apresentação do fato, (2) como aconteceu, (3) envolvidos e resultado policial, (4) providências tomadas
-- Finalize SEMPRE com:\nPolícia Civil da Paraíba\n15ª Delegacia Seccional\nAssessoria de Comunicação e Marketing Institucional (ASCOM/15ª)
-- ABUSO SEXUAL: NUNCA mencione nome completo da vítima — apenas iniciais e idade
-- Use "equipe policial", "autoridade policial", "providências cabíveis"
-- Retorne APENAS o texto da nota, sem comentários adicionais`,
-        messages: [{ role: 'user', content: buildPrompt(dados) }]
-      })
-    });
-
-    const aiData = await resp.json();
-    const nota = aiData.content?.map(c => c.text || '').join('') || '';
-    if (!nota) throw new Error('Resposta vazia');
-
     const hoje = new Date().toLocaleDateString('pt-BR');
     const assunto = `NOTA À IMPRENSA | ${TIPOS[tipoAtual].toUpperCase()} | ${dados.f_delegacia || '15ª DSPC'} | ${hoje}`;
 
-    await emailjs.send('service_tww534j', 'template_znxkvb7', {
-      assunto: assunto,
-      nota: nota,
-      delegacia: dados.f_delegacia || '15ª DSPC'
+    const resp = await fetch('https://pop-ascom-api.15dspc-ascom.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: buildPrompt(dados),
+        assunto: assunto,
+        delegacia: dados.f_delegacia || '15ª DSPC'
+      })
     });
+
+    const result = await resp.json();
+    if (!result.ok) throw new Error(result.error || 'Erro ao enviar');
 
     document.getElementById('status-spinner').style.display = 'none';
     document.getElementById('status-ok').style.display = 'block';
