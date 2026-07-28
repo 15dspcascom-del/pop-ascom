@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escalas 15ª DSPC - Patos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0b1220;
+    --panel:#131c2e;
+    --panel-2:#0f1729;
+    --border:#223049;
+    --text:#e6ebf3;
+    --text-muted:#8996ac;
+    --accent:#c9a227;
+    --accent-2:#3b82f6;
+    --danger:#ef4444;
+    --success:#22c55e;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.brand-font{font-family:'Barlow Condensed',sans-serif; letter-spacing:.03em;}
+  .hidden{display:none !important;}
+
+  /* LOGIN */
+  #login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 0%, #16223a 0%, #0b1220 60%);
+  }
+  .login-box{
+    width:100%; max-width:360px; background:var(--panel);
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:2rem; text-align:center;
+  }
+  .login-box .badge{
+    display:inline-block; padding:.3rem .9rem; border:1px solid var(--accent);
+    color:var(--accent); border-radius:999px; font-size:.75rem; letter-spacing:.08em;
+    text-transform:uppercase; margin-bottom:1rem;
+  }
+  .login-box h1{font-size:1.6rem; margin:.2rem 0 .3rem; text-transform:uppercase;}
+  .login-box p.sub{color:var(--text-muted); font-size:.85rem; margin:0 0 1.5rem;}
+  input, select, textarea{
+    width:100%; background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text); padding:.6rem .7rem; border-radius:8px; font-size:.9rem;
+    font-family:'Inter',sans-serif;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--accent-2);}
+  label{font-size:.8rem; color:var(--text-muted); display:block; margin:0 0 .3rem;}
+  .field{margin-bottom:1rem; text-align:left;}
+  button{
+    cursor:pointer; border:none; border-radius:8px; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:.85rem; padding:.65rem 1.1rem; transition:.15s opacity;
+  }
+  button:hover{opacity:.88;}
+  .btn-primary{background:var(--accent-2); color:#fff; width:100%;}
+  .btn-gold{background:var(--accent); color:#1a1305;}
+  .btn-ghost{background:transparent; border:1px solid var(--border); color:var(--text);}
+  .btn-danger{background:transparent; border:1px solid var(--danger); color:var(--danger);}
+  .btn-sm{padding:.4rem .7rem; font-size:.78rem;}
+  #login-error{color:var(--danger); font-size:.8rem; margin-top:.8rem; min-height:1em;}
+
+  /* APP SHELL */
+  #app-screen{display:flex; min-height:100vh;}
+  aside{
+    width:230px; background:var(--panel); border-right:1px solid var(--border);
+    padding:1.4rem 1rem; flex-shrink:0;
+  }
+  aside .logo{font-size:1.1rem; text-transform:uppercase; margin-bottom:.1rem;}
+  aside .logo-sub{font-size:.7rem; color:var(--text-muted); margin-bottom:2rem;}
+  .nav-item{
+    display:flex; align-items:center; gap:.5rem; padding:.6rem .7rem; border-radius:8px;
+    color:var(--text-muted); font-size:.85rem; font-weight:600; cursor:pointer; margin-bottom:.3rem;
+  }
+  .nav-item.active{background:var(--panel-2); color:var(--accent);}
+  .nav-item.disabled{opacity:.4; cursor:not-allowed;}
+  main{flex:1; padding:2rem 2.4rem; max-width:1400px;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.6rem;}
+  .topbar h1{font-size:1.5rem; margin:0; text-transform:uppercase;}
+  .user-chip{display:flex; align-items:center; gap:.7rem; font-size:.8rem; color:var(--text-muted);}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:1.4rem;}
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  th{
+    text-align:left; color:var(--text-muted); font-weight:600; font-size:.72rem;
+    text-transform:uppercase; letter-spacing:.04em; padding:.5rem .6rem; border-bottom:1px solid var(--border);
+  }
+  td{padding:.6rem; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .tag{
+    display:inline-block; font-size:.7rem; padding:.15rem .5rem; border-radius:5px; margin:1px 2px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text-muted);
+  }
+  .tag.on{border-color:var(--accent); color:var(--accent);}
+  .pill-cargo{
+    font-size:.7rem; padding:.2rem .55rem; border-radius:5px; font-weight:600; text-transform:uppercase;
+  }
+  .pill-escrivao{background:#1e2f4d; color:#7ab3ff;}
+  .pill-investigador{background:#2a2312; color:var(--accent);}
+  .pill-delegado{background:#2a1414; color:#ef8a8a;}
+
+  /* MODAL */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-start;
+    justify-content:center; padding:2.5rem 1rem; overflow-y:auto; z-index:50;
+  }
+  .modal{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    width:100%; max-width:640px; padding:1.6rem;
+  }
+  .modal h2{margin:0 0 1.2rem; font-size:1.3rem; text-transform:uppercase;}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:1rem;}
+  .checkbox-row{display:flex; align-items:center; gap:.5rem; margin-bottom:.6rem;}
+  .checkbox-row input{width:auto;}
+  .checkbox-row label{margin:0; color:var(--text); font-size:.85rem;}
+  .section-title{
+    font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--accent);
+    margin:1.2rem 0 .6rem; border-top:1px solid var(--border); padding-top:1rem;
+  }
+  .modal-actions{display:flex; justify-content:flex-end; gap:.6rem; margin-top:1.4rem;}
+  .incompat-list{max-height:150px; overflow-y:auto; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:.6rem;}
+  .ferias-item{display:flex; justify-content:space-between; align-items:center; padding:.4rem .6rem; background:var(--panel-2); border-radius:6px; margin-bottom:.4rem; font-size:.82rem;}
+  .empty-state{text-align:center; padding:2.5rem 1rem; color:var(--text-muted);}
+  .toast{
+    position:fixed; bottom:1.5rem; right:1.5rem; background:var(--panel); border:1px solid var(--accent);
+    color:var(--text); padding:.8rem 1.2rem; border-radius:8px; font-size:.85rem; z-index:100;
+  }
+  .toast.error{border-color:var(--danger);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <span class="badge">15ª DSPC · Patos</span>
+    <h1>Sistema de Escalas</h1>
+    <p class="sub">Acesso restrito à Assessoria de Estatística</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seunome@pc.pb.gov.br">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="Sua senha">
+    </div>
+    <button class="btn-primary" id="btn-login">Entrar</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div id="app-screen" class="hidden">
+  <aside>
+    <div class="logo">Escalas</div>
+    <div class="logo-sub">15ª DSPC · Patos/PB</div>
+    <div class="nav-item active" data-tab="servidores"><i>&#9776;</i> Servidores</div>
+    <div class="nav-item disabled" title="Em breve"><i>&#128197;</i> Gerar Escala</div>
+    <div class="nav-item disabled" title="Em breve"><i>&#128196;</i> Escalas Geradas</div>
+  </aside>
+  <main>
+    <div class="topbar">
+      <h1>Cadastro de Servidores</h1>
+      <div class="user-chip">
+        <span id="user-email"></span>
+        <button class="btn-ghost btn-sm" id="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div style="color:var(--text-muted); font-size:.85rem;" id="servidores-count">Carregando...</div>
+      <button class="btn-gold" id="btn-novo-servidor">+ Novo Servidor</button>
+    </div>
+
+    <div class="panel">
+      <table id="tabela-servidores">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Cargo</th>
+            <th>Sexo</th>
+            <th>Atributos</th>
+            <th>Polos</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="servidores-tbody"></tbody>
+      </table>
+      <div id="servidores-empty" class="empty-state hidden">Nenhum servidor cadastrado ainda. Clique em "Novo Servidor" para começar.</div>
+    </div>
+  </main>
+</div>
+
+<div id="modal-servidor" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="modal-title">Novo Servidor</h2>
+
+    <div class="field">
+      <label>Nome completo</label>
+      <input type="text" id="f-nome" placeholder="Ex: João Victor Souza">
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Cargo</label>
+        <select id="f-cargo">
+          <option value="investigador">Investigador</option>
+          <option value="escrivao">Escrivão</option>
+          <option value="delegado">Delegado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Sexo</label>
+        <select id="f-sexo">
+          <option value="M">Masculino</option>
+          <option value="F">Feminino</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-title">Atributos</div>
+    <div class="checkbox-row"><input type="checkbox" id="f-dirige"><label for="f-dirige">Sabe dirigir</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="f-novato"><label for="f-novato">Novato</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="f-ordinario"><label for="f-ordinario">Disponível para Ordinário 24/72 (Patos)</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="f-secust"><label for="f-secust">Disponível para SECUST (exclusivo)</label></div>
+
+    <div class="section-title">Polos permitidos</div>
+    <div class="checkbox-row"><input type="checkbox" id="f-polo-patos-semana" checked><label for="f-polo-patos-semana">Patos - dia de semana</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="f-polo-patos-fds" checked><label for="f-polo-patos-fds">Patos - fim de semana</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="f-polo-teixeira-fds"><label for="f-polo-teixeira-fds">Teixeira - fim de semana / feriados</label></div>
+
+    <div class="section-title">Incompatibilidades (não podem estar no mesmo plantão)</div>
+    <div class="incompat-list" id="f-incompatibilidades"></div>
+
+    <div class="section-title">Férias / afastamentos</div>
+    <div id="f-ferias-list"></div>
+    <div class="grid-2" style="margin-top:.5rem;">
+      <div class="field" style="margin-bottom:.5rem;">
+        <label>Início</label>
+        <input type="date" id="f-ferias-inicio">
+      </div>
+      <div class="field" style="margin-bottom:.5rem;">
+        <label>Fim</label>
+        <input type="date" id="f-ferias-fim">
+      </div>
+    </div>
+    <button class="btn-ghost btn-sm" id="btn-add-ferias" type="button">+ Adicionar período</button>
+    <p style="font-size:.75rem; color:var(--text-muted); margin-top:.3rem;" id="ferias-hint">Salve o servidor primeiro para poder adicionar férias.</p>
+
+    <div class="field" style="margin-top:1.2rem;">
+      <label>Observações</label>
+      <textarea id="f-observacoes" rows="2" placeholder="Opcional"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-cancelar-modal">Cancelar</button>
+      <button class="btn-primary" id="btn-salvar-servidor" style="width:auto;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== CONFIGURAÇÃO SUPABASE =====================
+// Substitua pelos dados do SEU projeto Supabase (Settings > API)
+const SUPABASE_URL = 'https://ponktogsjsogoclfpzen.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvbmt0b2dzanNvZ29jbGZwemVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNTcxMTcsImV4cCI6MjEwMDgzMzExN30.NZMnfIAgVS0OPoUFTyeFaNMrBuutJFBbxzx92jczAME';
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===================== ESTADO =====================
+let currentUser = null;
+let servidoresCache = [];
+let editandoServidorId = null;
+let feriasTemp = []; // usado ao criar servidor novo (antes de ter id)
+
+// ===================== AUTENTICAÇÃO =====================
+async function checkSession(){
+  const { data: { session } } = await supa.auth.getSession();
+  if (session){
+    currentUser = session.user;
+    mostrarApp();
+  } else {
+    mostrarLogin();
+  }
+}
+
+function mostrarLogin(){
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-screen').classList.add('hidden');
+}
+
+function mostrarApp(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  document.getElementById('user-email').textContent = currentUser.email;
+  carregarServidores();
+}
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!email || !senha){
+    errEl.textContent = 'Preencha e-mail e senha.';
+    return;
+  }
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: senha });
+  if (error){
+    errEl.textContent = 'E-mail ou senha inválidos.';
+    return;
+  }
+  currentUser = data.user;
+  mostrarApp();
+});
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+  await supa.auth.signOut();
+  currentUser = null;
+  mostrarLogin();
+});
+
+// ===================== CARREGAR SERVIDORES =====================
+async function carregarServidores(){
+  const { data, error } = await supa
+    .from('servidores')
+    .select('*')
+    .order('nome', { ascending: true });
+
+  if (error){
+    mostrarToast('Erro ao carregar servidores: ' + error.message, true);
+    return;
+  }
+  servidoresCache = data || [];
+  renderTabela();
+}
+
+function renderTabela(){
+  const tbody = document.getElementById('servidores-tbody');
+  const emptyEl = document.getElementById('servidores-empty');
+  const countEl = document.getElementById('servidores-count');
+  tbody.innerHTML = '';
+
+  countEl.textContent = servidoresCache.length + ' servidor(es) cadastrado(s)';
+
+  if (servidoresCache.length === 0){
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  servidoresCache.forEach(s => {
+    const tr = document.createElement('tr');
+
+    const atributos = [];
+    if (s.dirige) atributos.push('<span class="tag on">Dirige</span>');
+    if (s.novato) atributos.push('<span class="tag on">Novato</span>');
+    if (s.disponivel_ordinario) atributos.push('<span class="tag on">Ordinário</span>');
+    if (s.disponivel_secust) atributos.push('<span class="tag on">SECUST</span>');
+    if (atributos.length === 0) atributos.push('<span class="tag">-</span>');
+
+    const polos = [];
+    if (s.polo_patos_semana) polos.push('<span class="tag on">Patos sem.</span>');
+    if (s.polo_patos_fds) polos.push('<span class="tag on">Patos fds</span>');
+    if (s.polo_teixeira_fds) polos.push('<span class="tag on">Teixeira</span>');
+    if (polos.length === 0) polos.push('<span class="tag">-</span>');
+
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(s.nome)}</strong></td>
+      <td><span class="pill-cargo pill-${s.cargo}">${labelCargo(s.cargo)}</span></td>
+      <td>${s.sexo}</td>
+      <td>${atributos.join('')}</td>
+      <td>${polos.join('')}</td>
+      <td>${s.ativo ? '<span class="tag on">Ativo</span>' : '<span class="tag">Inativo</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-ghost btn-sm" data-edit="${s.id}">Editar</button>
+        <button class="btn-danger btn-sm" data-del="${s.id}">Excluir</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => abrirModalEdicao(btn.dataset.edit));
+  });
+  tbody.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => excluirServidor(btn.dataset.del));
+  });
+}
+
+function labelCargo(c){
+  return { escrivao: 'Escrivão', investigador: 'Investigador', delegado: 'Delegado' }[c] || c;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ===================== MODAL: NOVO / EDITAR =====================
+document.getElementById('btn-novo-servidor').addEventListener('click', () => abrirModalNovo());
+document.getElementById('btn-cancelar-modal').addEventListener('click', fecharModal);
+
+function abrirModalNovo(){
+  editandoServidorId = null;
+  feriasTemp = [];
+  document.getElementById('modal-title').textContent = 'Novo Servidor';
+  document.getElementById('f-nome').value = '';
+  document.getElementById('f-cargo').value = 'investigador';
+  document.getElementById('f-sexo').value = 'M';
+  document.getElementById('f-dirige').checked = false;
+  document.getElementById('f-novato').checked = false;
+  document.getElementById('f-ordinario').checked = false;
+  document.getElementById('f-secust').checked = false;
+  document.getElementById('f-polo-patos-semana').checked = true;
+  document.getElementById('f-polo-patos-fds').checked = true;
+  document.getElementById('f-polo-teixeira-fds').checked = false;
+  document.getElementById('f-observacoes').value = '';
+  document.getElementById('ferias-hint').classList.remove('hidden');
+  renderFeriasList([]);
+  renderIncompatibilidadesList(null, []);
+  document.getElementById('modal-servidor').classList.remove('hidden');
+}
+
+async function abrirModalEdicao(id){
+  const s = servidoresCache.find(x => x.id === id);
+  if (!s) return;
+  editandoServidorId = id;
+  document.getElementById('modal-title').textContent = 'Editar Servidor';
+  document.getElementById('f-nome').value = s.nome;
+  document.getElementById('f-cargo').value = s.cargo;
+  document.getElementById('f-sexo').value = s.sexo;
+  document.getElementById('f-dirige').checked = s.dirige;
+  document.getElementById('f-novato').checked = s.novato;
+  document.getElementById('f-ordinario').checked = s.disponivel_ordinario;
+  document.getElementById('f-secust').checked = s.disponivel_secust;
+  document.getElementById('f-polo-patos-semana').checked = s.polo_patos_semana;
+  document.getElementById('f-polo-patos-fds').checked = s.polo_patos_fds;
+  document.getElementById('f-polo-teixeira-fds').checked = s.polo_teixeira_fds;
+  document.getElementById('f-observacoes').value = s.observacoes || '';
+  document.getElementById('ferias-hint').classList.add('hidden');
+
+  const { data: ferias } = await supa.from('ferias').select('*').eq('servidor_id', id).order('data_inicio');
+  renderFeriasList(ferias || []);
+
+  const { data: incompats } = await supa
+    .from('incompatibilidades')
+    .select('*')
+    .or(`servidor_id_1.eq.${id},servidor_id_2.eq.${id}`);
+  const idsIncompat = (incompats || []).map(i => i.servidor_id_1 === id ? i.servidor_id_2 : i.servidor_id_1);
+  renderIncompatibilidadesList(id, idsIncompat);
+
+  document.getElementById('modal-servidor').classList.remove('hidden');
+}
+
+function fecharModal(){
+  document.getElementById('modal-servidor').classList.add('hidden');
+}
+
+function renderIncompatibilidadesList(currentId, selectedIds){
+  const container = document.getElementById('f-incompatibilidades');
+  const outros = servidoresCache.filter(s => s.id !== currentId);
+  if (outros.length === 0){
+    container.innerHTML = '<span style="color:var(--text-muted); font-size:.8rem;">Cadastre outros servidores primeiro.</span>';
+    return;
+  }
+  container.innerHTML = outros.map(s => `
+    <div class="checkbox-row">
+      <input type="checkbox" class="incompat-check" value="${s.id}" ${selectedIds.includes(s.id) ? 'checked' : ''}>
+      <label>${escapeHtml(s.nome)}</label>
+    </div>
+  `).join('');
+}
+
+function renderFeriasList(lista){
+  const container = document.getElementById('f-ferias-list');
+  feriasTemp = lista;
+  if (lista.length === 0){
+    container.innerHTML = '<p style="font-size:.8rem; color:var(--text-muted);">Nenhum período cadastrado.</p>';
+    return;
+  }
+  container.innerHTML = lista.map((f, idx) => `
+    <div class="ferias-item">
+      <span>${formatarData(f.data_inicio)} até ${formatarData(f.data_fim)}</span>
+      <button class="btn-danger btn-sm" data-ferias-del="${f.id || idx}" type="button">Remover</button>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('[data-ferias-del]').forEach(btn => {
+    btn.addEventListener('click', () => removerFerias(btn.dataset.feriasDel));
+  });
+}
+
+function formatarData(iso){
+  const [ano, mes, dia] = iso.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+document.getElementById('btn-add-ferias').addEventListener('click', async () => {
+  const inicio = document.getElementById('f-ferias-inicio').value;
+  const fim = document.getElementById('f-ferias-fim').value;
+  if (!inicio || !fim){
+    mostrarToast('Preencha início e fim do período.', true);
+    return;
+  }
+  if (fim < inicio){
+    mostrarToast('A data de fim não pode ser antes do início.', true);
+    return;
+  }
+  if (!editandoServidorId){
+    mostrarToast('Salve o servidor antes de adicionar férias.', true);
+    return;
+  }
+  const { data, error } = await supa.from('ferias').insert({
+    servidor_id: editandoServidorId,
+    data_inicio: inicio,
+    data_fim: fim
+  }).select();
+  if (error){
+    mostrarToast('Erro ao adicionar férias: ' + error.message, true);
+    return;
+  }
+  feriasTemp.push(data[0]);
+  renderFeriasList(feriasTemp);
+  document.getElementById('f-ferias-inicio').value = '';
+  document.getElementById('f-ferias-fim').value = '';
+});
+
+async function removerFerias(id){
+  await supa.from('ferias').delete().eq('id', id);
+  feriasTemp = feriasTemp.filter(f => String(f.id) !== String(id));
+  renderFeriasList(feriasTemp);
+}
+
+// ===================== SALVAR SERVIDOR =====================
+document.getElementById('btn-salvar-servidor').addEventListener('click', async () => {
+  const nome = document.getElementById('f-nome').value.trim();
+  if (!nome){
+    mostrarToast('Informe o nome do servidor.', true);
+    return;
+  }
+
+  const payload = {
+    nome,
+    cargo: document.getElementById('f-cargo').value,
+    sexo: document.getElementById('f-sexo').value,
+    dirige: document.getElementById('f-dirige').checked,
+    novato: document.getElementById('f-novato').checked,
+    disponivel_ordinario: document.getElementById('f-ordinario').checked,
+    disponivel_secust: document.getElementById('f-secust').checked,
+    polo_patos_semana: document.getElementById('f-polo-patos-semana').checked,
+    polo_patos_fds: document.getElementById('f-polo-patos-fds').checked,
+    polo_teixeira_fds: document.getElementById('f-polo-teixeira-fds').checked,
+    observacoes: document.getElementById('f-observacoes').value.trim() || null
+  };
+
+  let servidorId = editandoServidorId;
+
+  if (editandoServidorId){
+    const { error } = await supa.from('servidores').update(payload).eq('id', editandoServidorId);
+    if (error){ mostrarToast('Erro ao salvar: ' + error.message, true); return; }
+  } else {
+    const { data, error } = await supa.from('servidores').insert(payload).select();
+    if (error){ mostrarToast('Erro ao salvar: ' + error.message, true); return; }
+    servidorId = data[0].id;
+  }
+
+  // Salvar incompatibilidades (apaga as antigas envolvendo este servidor e recria)
+  const checks = document.querySelectorAll('.incompat-check:checked');
+  const novosPares = Array.from(checks).map(c => c.value);
+
+  await supa.from('incompatibilidades')
+    .delete()
+    .or(`servidor_id_1.eq.${servidorId},servidor_id_2.eq.${servidorId}`);
+
+  if (novosPares.length > 0){
+    const linhas = novosPares.map(outroId => {
+      const [id1, id2] = [servidorId, outroId].sort();
+      return { servidor_id_1: id1, servidor_id_2: id2 };
+    });
+    await supa.from('incompatibilidades').upsert(linhas, { onConflict: 'servidor_id_1,servidor_id_2' });
+  }
+
+  mostrarToast(editandoServidorId ? 'Servidor atualizado.' : 'Servidor cadastrado.');
+  fecharModal();
+  await carregarServidores();
+});
+
+async function excluirServidor(id){
+  if (!confirm('Tem certeza que deseja excluir este servidor? Essa ação não pode ser desfeita.')) return;
+  const { error } = await supa.from('servidores').delete().eq('id', id);
+  if (error){ mostrarToast('Erro ao excluir: ' + error.message, true); return; }
+  mostrarToast('Servidor excluído.');
+  carregarServidores();
+}
+
+// ===================== TOAST =====================
+function mostrarToast(msg, isError){
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ===================== INIT =====================
+checkSession();
+</script>
+</body>
+</html>
